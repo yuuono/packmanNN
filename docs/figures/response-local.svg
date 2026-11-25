@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="295" viewBox="0 0 1120 295" role="img" aria-labelledby="title desc" lang="ja">
+  <title id="title">目先の採餌を構成する2つの加点</title>
+  <desc id="desc">4手で拾える個数の加点は0から0.65点まで直線的に増加　最寄りのエサまでの距離による加点は0マスで0.35点　2マスで約0.117点</desc>
+  <style>
+    text { fill: #171717; font-family: 'Hiragino Sans', 'Yu Gothic', 'Noto Sans CJK JP', sans-serif; }
+    .heading { font-size: 24px; font-weight: 700; }
+    .sub, .tick { font-size: 17px; }
+    .unit, .value { font-size: 18px; }
+    .value { font-weight: 700; paint-order: stroke; stroke: white; stroke-width: 4px; }
+    .grid, .axis, .curve { fill: none; }
+    .grid { stroke: #dddddd; }
+    .axis { stroke: #666666; stroke-width: 1.4; }
+    .curve { stroke: #222222; stroke-width: 2.8; }
+    .point { fill: white; stroke: #222222; stroke-width: 1.8; }
+    .focus { fill: #171717; stroke: white; stroke-width: 1.2; }
+  </style>
+  <rect width="1120" height="295" fill="white"/>
+  <path d="M560 9V281" class="grid"/>
+  <text x="20" y="30" class="heading" text-anchor="start">4手で拾えるエサの数</text>
+  <text x="20" y="59" class="sub" text-anchor="start">個数による加点 ＝ 0.65 × 個数 ÷ 4</text>
+  <path d="M65 221.00H517" class="grid"/>
+  <text x="53" y="227" class="tick" text-anchor="end">0</text>
+  <path d="M65 156.50H517" class="grid"/>
+  <text x="53" y="162.5" class="tick" text-anchor="end">0.35</text>
+  <path d="M65 101.21H517" class="grid"/>
+  <text x="53" y="107.214" class="tick" text-anchor="end">0.65</text>
+  <path d="M65 92V221H517" class="axis"/>
+  <path d="M65.00 221v5" class="axis"/>
+  <text x="65" y="247" class="tick" text-anchor="middle">0</text>
+  <path d="M178.00 221v5" class="axis"/>
+  <text x="178" y="247" class="tick" text-anchor="middle">1</text>
+  <path d="M291.00 221v5" class="axis"/>
+  <text x="291" y="247" class="tick" text-anchor="middle">2</text>
+  <path d="M404.00 221v5" class="axis"/>
+  <text x="404" y="247" class="tick" text-anchor="middle">3</text>
+  <path d="M517.00 221v5" class="axis"/>
+  <text x="517" y="247" class="tick" text-anchor="middle">4</text>
+  <text x="291" y="281" class="unit" text-anchor="middle">4手で拾える最大数　個</text>
+  <path d="M65.00 221.00 L178.00 191.05 L291.00 161.11 L404.00 131.16 L517.00 101.21" class="curve"/>
+  <circle cx="65.00" cy="221.00" r="3.5" class="point"/>
+  <circle cx="178.00" cy="191.05" r="3.5" class="point"/>
+  <circle cx="291.00" cy="161.11" r="3.5" class="point"/>
+  <circle cx="404.00" cy="131.16" r="3.5" class="point"/>
+  <circle cx="517.00" cy="101.21" r="3.5" class="point"/>
+  <circle cx="291.00" cy="161.11" r="4.5" class="focus"/>
+  <text x="301" y="151.107" class="value" text-anchor="start">0.325点</text>
+  <circle cx="517.00" cy="101.21" r="4.5" class="focus"/>
+  <text x="509" y="90.2143" class="value" text-anchor="end">0.650点</text>
+  <text x="580" y="30" class="heading" text-anchor="start">最寄りのエサまでの距離</text>
+  <text x="580" y="59" class="sub" text-anchor="start">距離による加点 ＝ 0.35 ÷（1 ＋ 距離）</text>
+  <path d="M625 221.00H1077" class="grid"/>
+  <text x="613" y="227" class="tick" text-anchor="end">0</text>
+  <path d="M625 156.50H1077" class="grid"/>
+  <text x="613" y="162.5" class="tick" text-anchor="end">0.35</text>
+  <path d="M625 101.21H1077" class="grid"/>
+  <text x="613" y="107.214" class="tick" text-anchor="end">0.65</text>
+  <path d="M625 92V221H1077" class="axis"/>
+  <path d="M625.00 221v5" class="axis"/>
+  <text x="625" y="247" class="tick" text-anchor="middle">0</text>
+  <path d="M738.00 221v5" class="axis"/>
+  <text x="738" y="247" class="tick" text-anchor="middle">2</text>
+  <path d="M851.00 221v5" class="axis"/>
+  <text x="851" y="247" class="tick" text-anchor="middle">4</text>
+  <path d="M964.00 221v5" class="axis"/>
+  <text x="964" y="247" class="tick" text-anchor="middle">6</text>
+  <path d="M1077.00 221v5" class="axis"/>
+  <text x="1077" y="247" class="tick" text-anchor="middle">8</text>
+  <text x="851" y="281" class="unit" text-anchor="middle">1歩先から最寄りのエサまでの距離　マス</text>
+  <path d="M625.00 156.50 L630.65 162.36 L636.30 167.25 L641.95 171.38 L647.60 174.93 L653.25 178.00 L658.90 180.69 L664.55 183.06 L670.20 185.17 L675.85 187.05 L681.50 188.75 L687.15 190.29 L692.80 191.68 L698.45 192.96 L704.10 194.12 L709.75 195.20 L715.40 196.19 L721.05 197.11 L726.70 197.96 L732.35 198.76 L738.00 199.50 L743.65 200.19 L749.30 200.84 L754.95 201.45 L760.60 202.03 L766.25 202.57 L771.90 203.08 L777.55 203.57 L783.20 204.03 L788.85 204.46 L794.50 204.88 L800.15 205.27 L805.80 205.64 L811.45 206.00 L817.10 206.34 L822.75 206.67 L828.40 206.98 L834.05 207.28 L839.70 207.56 L845.35 207.84 L851.00 208.10 L856.65 208.35 L862.30 208.60 L867.95 208.83 L873.60 209.06 L879.25 209.27 L884.90 209.48 L890.55 209.68 L896.20 209.88 L901.85 210.07 L907.50 210.25 L913.15 210.43 L918.80 210.60 L924.45 210.76 L930.10 210.92 L935.75 211.08 L941.40 211.23 L947.05 211.37 L952.70 211.51 L958.35 211.65 L964.00 211.79 L969.65 211.92 L975.30 212.04 L980.95 212.16 L986.60 212.28 L992.25 212.40 L997.90 212.51 L1003.55 212.62 L1009.20 212.73 L1014.85 212.84 L1020.50 212.94 L1026.15 213.04 L1031.80 213.13 L1037.45 213.23 L1043.10 213.32 L1048.75 213.41 L1054.40 213.50 L1060.05 213.59 L1065.70 213.67 L1071.35 213.75 L1077.00 213.83" class="curve"/>
+  <circle cx="625.00" cy="156.50" r="3.5" class="point"/>
+  <circle cx="681.50" cy="188.75" r="3.5" class="point"/>
+  <circle cx="738.00" cy="199.50" r="3.5" class="point"/>
+  <circle cx="794.50" cy="204.88" r="3.5" class="point"/>
+  <circle cx="851.00" cy="208.10" r="3.5" class="point"/>
+  <circle cx="907.50" cy="210.25" r="3.5" class="point"/>
+  <circle cx="964.00" cy="211.79" r="3.5" class="point"/>
+  <circle cx="1020.50" cy="212.94" r="3.5" class="point"/>
+  <circle cx="1077.00" cy="213.83" r="3.5" class="point"/>
+  <circle cx="625.00" cy="156.50" r="4.5" class="focus"/>
+  <text x="634" y="146.5" class="value" text-anchor="start">0.350点</text>
+  <circle cx="738.00" cy="199.50" r="4.5" class="focus"/>
+  <text x="746" y="189.5" class="value" text-anchor="start">約0.117点</text>
+</svg>

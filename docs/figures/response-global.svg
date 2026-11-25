@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="295" viewBox="0 0 1120 295" role="img" aria-labelledby="title desc" lang="ja">
+  <title id="title">候補どうしの歩数差と全体の点</title>
+  <desc id="desc">実際の交差点では最長195歩　最短183歩　185歩なら約0.833点　比較例では最短193歩で歩数差が2歩なので分母が4歩になり最高点は0.5点</desc>
+  <style>
+    text { fill: #171717; font-family: 'Hiragino Sans', 'Yu Gothic', 'Noto Sans CJK JP', sans-serif; }
+    .heading { font-size: 24px; font-weight: 700; }
+    .sub, .tick { font-size: 17px; }
+    .unit, .value { font-size: 18px; }
+    .value { font-weight: 700; paint-order: stroke; stroke: white; stroke-width: 4px; }
+    .grid, .axis, .curve { fill: none; }
+    .grid { stroke: #dddddd; }
+    .axis { stroke: #666666; stroke-width: 1.4; }
+    .curve { stroke: #222222; stroke-width: 2.8; }
+    .point { fill: white; stroke: #222222; stroke-width: 1.8; }
+    .focus { fill: #171717; stroke: white; stroke-width: 1.2; }
+  </style>
+  <rect width="1120" height="295" fill="white"/>
+  <path d="M560 9V281" class="grid"/>
+  <text x="20" y="30" class="heading" text-anchor="start">実際の交差点　歩数差12歩</text>
+  <text x="20" y="59" class="sub" text-anchor="start">全体の点 ＝（195 − この候補の歩数）÷ 12</text>
+  <path d="M65 221.00H517" class="grid"/>
+  <text x="53" y="227" class="tick" text-anchor="end">0</text>
+  <path d="M65 156.50H517" class="grid"/>
+  <text x="53" y="162.5" class="tick" text-anchor="end">0.5</text>
+  <path d="M65 92.00H517" class="grid"/>
+  <text x="53" y="98" class="tick" text-anchor="end">1</text>
+  <path d="M65 92V221H517" class="axis"/>
+  <path d="M65.00 221v5" class="axis"/>
+  <text x="65" y="247" class="tick" text-anchor="middle">183</text>
+  <path d="M140.33 221v5" class="axis"/>
+  <text x="140.333" y="247" class="tick" text-anchor="middle">185</text>
+  <path d="M291.00 221v5" class="axis"/>
+  <text x="291" y="247" class="tick" text-anchor="middle">189</text>
+  <path d="M404.00 221v5" class="axis"/>
+  <text x="404" y="247" class="tick" text-anchor="middle">192</text>
+  <path d="M517.00 221v5" class="axis"/>
+  <text x="517" y="247" class="tick" text-anchor="middle">195</text>
+  <text x="291" y="281" class="unit" text-anchor="middle">この候補の推定歩数　歩</text>
+  <path d="M65.00 92.00 L517.00 221.00" class="curve"/>
+  <circle cx="65.00" cy="92.00" r="4.5" class="focus"/>
+  <text x="75" y="82" class="value" text-anchor="start">上  1.000点</text>
+  <circle cx="140.33" cy="113.50" r="4.5" class="focus"/>
+  <text x="150.333" y="107.5" class="value" text-anchor="start">下  0.833点</text>
+  <circle cx="517.00" cy="221.00" r="4.5" class="focus"/>
+  <text x="507" y="210" class="value" text-anchor="end">左  0点</text>
+  <text x="580" y="30" class="heading" text-anchor="start">比較例　歩数差2歩</text>
+  <text x="580" y="59" class="sub" text-anchor="start">全体の点 ＝（195 − この候補の歩数）÷ 4</text>
+  <path d="M625 221.00H1077" class="grid"/>
+  <text x="613" y="227" class="tick" text-anchor="end">0</text>
+  <path d="M625 156.50H1077" class="grid"/>
+  <text x="613" y="162.5" class="tick" text-anchor="end">0.5</text>
+  <path d="M625 92.00H1077" class="grid"/>
+  <text x="613" y="98" class="tick" text-anchor="end">1</text>
+  <path d="M625 92V221H1077" class="axis"/>
+  <path d="M625.00 221v5" class="axis"/>
+  <text x="625" y="247" class="tick" text-anchor="middle">193</text>
+  <path d="M851.00 221v5" class="axis"/>
+  <text x="851" y="247" class="tick" text-anchor="middle">194</text>
+  <path d="M1077.00 221v5" class="axis"/>
+  <text x="1077" y="247" class="tick" text-anchor="middle">195</text>
+  <text x="851" y="281" class="unit" text-anchor="middle">この候補の推定歩数　歩</text>
+  <path d="M625.00 156.50 L1077.00 221.00" class="curve"/>
+  <circle cx="625.00" cy="156.50" r="4.5" class="focus"/>
+  <text x="635" y="145.5" class="value" text-anchor="start">0.50点</text>
+  <circle cx="851.00" cy="188.75" r="4.5" class="focus"/>
+  <text x="861" y="178.75" class="value" text-anchor="start">0.25点</text>
+  <circle cx="1077.00" cy="221.00" r="4.5" class="focus"/>
+  <text x="1069" y="209" class="value" text-anchor="end">0点</text>
+</svg>

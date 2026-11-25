@@ -2,17 +2,25 @@
   <title id="title">同じ交差点での総合点の比較</title>
   <desc id="desc">均等配分では上が0.690点で首位　慎重重視では下の慎重さの寄与だけで0.700点となり総合0.861点で首位</desc>
   <style>
-    text { font-family: 'Hiragino Sans', 'Yu Gothic', 'Noto Sans CJK JP', sans-serif; fill: #12354b }
-    .local { fill: #b6651e } .global { fill: #637eaa } .safe { fill: #11736b } .power { fill: #975580 }
+    text { font-family: 'Hiragino Sans', 'Yu Gothic', 'Noto Sans CJK JP', sans-serif; fill: #171717 }
+    rect.local { fill: #b5b5b5 } rect.global { fill: url(#stripes) }
+    rect.safe { fill: #222 } rect.power { fill: url(#dots) }
     .legend { font-size: 22px; font-weight: 600 } .heading { font-size: 30px; font-weight: 700 }
     .direction { font-size: 23px; font-weight: 700 } .score { font-size: 23px; font-variant-numeric: tabular-nums }
-    .winner { fill: #11736b; font-weight: 800 } .muted { fill: #506470; font-size: 19px }
-    .weights { font-size: 20px; font-weight: 600 } text.local { fill: #9a4d16 }
-    .track { fill: #edf1f3 }
+    .winner { fill: #111; font-weight: 800 } .muted { fill: #454545; font-size: 19px }
+    .weights { font-size: 20px; font-weight: 600 }
+    .track { fill: #efefef }
   </style>
   <defs>
+    <pattern id="stripes" patternUnits="userSpaceOnUse" width="7" height="7">
+      <rect width="7" height="7" fill="#ddd"/>
+      <path d="M-1 1L1 -1 M0 7L7 0 M6 8L8 6" stroke="#555" stroke-width="1.7"/>
+    </pattern>
+    <pattern id="dots" patternUnits="userSpaceOnUse" width="5" height="5">
+      <rect width="5" height="5" fill="#666"/><circle cx="2.5" cy="2.5" r="1.05" fill="#fff"/>
+    </pattern>
     <g id="grid">
-      <path d="M67 81v138 m165 -138v138 m165 -138v138" fill="none" stroke="#a6b5bd" stroke-dasharray="3 4"/>
+      <path d="M67 81v138 m165 -138v138 m165 -138v138" fill="none" stroke="#aaa" stroke-dasharray="3 4"/>
       <g class="track">
         <rect x="67" y="99" width="330" height="23"/>
         <rect x="67" y="145" width="330" height="23"/>
@@ -28,14 +36,14 @@
     </g>
   </defs>
   <rect width="1120" height="310" fill="#ffffff"/>
-  <path d="M8 46H1112 M551 60V298" fill="none" stroke="#cbd5db" stroke-width="1.5"/>
+  <path d="M8 46H1112 M551 60V298" fill="none" stroke="#ccc" stroke-width="1.5"/>
   <g class="legend">
     <rect x="8" y="8" width="19" height="19" rx="3" class="local"/><text x="37" y="26">目先の採餌</text>
     <rect x="195" y="8" width="19" height="19" rx="3" class="global"/><text x="224" y="26">全体の回収</text>
     <rect x="386" y="8" width="19" height="19" rx="3" class="safe"/><text x="415" y="26">慎重さ</text>
     <rect x="525" y="8" width="19" height="19" rx="3" class="power"/><text x="554" y="26">パワー活用</text>
   </g>
-  <text x="1110" y="26" text-anchor="end" class="muted">各色の長さ ＝ 項目の点 × 重み</text>
+  <text x="1110" y="26" text-anchor="end" class="muted">各区間の長さ ＝ 項目の点 × 重み</text>
   <g transform="translate(0 51)">
     <use href="#grid"/>
     <text x="23" y="42" class="heading">均等配分 → 上</text>

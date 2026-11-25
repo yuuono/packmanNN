@@ -9,7 +9,7 @@ description: 応答曲線で盤面を採点して性格の重みに応じて進�
 style: |
   section {
     background: #fff;
-    color: #203847;
+    color: #222;
     color-scheme: light;
     font-family: "Hiragino Sans", "Yu Gothic", "Noto Sans CJK JP", sans-serif;
     font-size: 28px;
@@ -17,24 +17,25 @@ style: |
     padding: 48px 80px;
     font-variant-numeric: tabular-nums;
   }
-  h1, h2 { color: #12354b; letter-spacing: -0.03em; line-height: 1.25; }
+  h1, h2 { color: #111; letter-spacing: -0.03em; line-height: 1.25; }
   h1 { font-size: 52px; }
   h2 { font-size: 43px; }
-  strong, a { color: #09685f; }
+  strong, a, a:visited, a:hover, a:active { color: #111; }
+  a { text-decoration: underline; }
   p { margin: 0.5em 0; }
   p > img { display: block; width: 100%; height: auto; background: transparent; }
   table { font-size: 0.94em; margin: 0.55em 0; }
-  table th, table td { border: 1px solid #c6d5d8; padding: 0.28em 0.8em; }
-  table th { background: #e9f3f2; color: #12354b; }
+  table th, table td { border: 1px solid #c8c8c8; padding: 0.28em 0.8em; }
+  table th { background: #f0f0f0; color: #111; }
   table tr, table tr:nth-child(2n) { background: #fff; }
-  blockquote { color: #12354b; background: #f0f7f6; border-left: 5px solid #11736b; padding: 0.2em 0.65em; }
-  section::after { color: #576d78; font-size: 16px; }
+  blockquote { color: #111; background: #f6f6f6; border-left: 5px solid #444; padding: 0.2em 0.65em; }
+  section::after { color: #555; font-size: 16px; }
   section.junction ul, section.flow ol {
     display: grid; list-style: none; padding: 0; margin: 22px 0; gap: 26px;
   }
   section.junction li, section.flow li {
-    padding: 16px 12px; margin: 0; text-align: center; border: 2px solid #a5bebf;
-    border-radius: 6px; background: #f5f9f9; color: #12354b;
+    padding: 16px 12px; margin: 0; text-align: center; border: 2px solid #aaa;
+    border-radius: 6px; background: #fafafa; color: #111;
   }
   section.junction ul {
     grid-template-columns: repeat(3, 185px); grid-template-areas: ". n ." "w p e" ". s .";
@@ -43,8 +44,8 @@ style: |
   section.junction li { font-size: 25px; padding: 12px 8px; }
   section.junction li:nth-child(1) { grid-area: n; }
   section.junction li:nth-child(2) { grid-area: w; }
-  section.junction li:nth-child(3) { grid-area: p; background: #fff4d2; border-color: #a77925; }
-  section.junction li:nth-child(4) { grid-area: e; background: #e4eaed; border-color: #b6c4cb; }
+  section.junction li:nth-child(3) { grid-area: p; background: #fff; border-color: #222; }
+  section.junction li:nth-child(4) { grid-area: e; background: #e6e6e6; border-color: #aaa; }
   section.junction li:nth-child(5) { grid-area: s; }
   section.flow ol { grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 38px; }
   section.flow li { position: relative; font-size: 22px; }
@@ -52,7 +53,7 @@ style: |
   section.flow li br { display: none; }
   section.flow li:not(:last-child)::after {
     content: "→"; position: absolute; top: 50%; left: calc(100% + 2px);
-    transform: translateY(-50%); width: 34px; color: #476974; font-size: 26px;
+    transform: translateY(-50%); width: 34px; color: #444; font-size: 26px;
   }
 ---
 
@@ -91,14 +92,85 @@ style: |
 
 ---
 
-## 盤面の値を点数に変える応答曲線
+## 進路の採点に使う応答曲線の一覧
 
-応答曲線は観測値を評価点に変える関数　このデモでは人が曲線の形を決める
+応答曲線は距離や個数などの観測値を評価点に変える関数
 
-![パワー活用の近さは距離とともに低下し慎重さは到着の余裕に応じて0から1まで上昇するグラフ](figures/utility-response.svg)
+| 頁 | 採点項目 | 入力と得点の関係 |
+|---:|:---|:---|
+| 4 | 目先の採餌 | エサの数に比例して加点　距離で減衰 |
+| 5 | 全体の回収 | 推定歩数が短い候補ほど高得点 |
+| 6 | 慎重さ | 余裕が増すと直線的に上昇　両端で一定 |
+| 7 | パワー活用　通常時 | エサに近いほど加点　敵の近さで増幅 |
+| 8 | パワー活用　パワー中 | 時間内に届くときだけ敵の近さで加点 |
 
-**近さ**　4マスから0マスなら0.50点上昇　12マスから8マスなら約0.08点上昇\
-**慎重さ**　余裕が−2マス以下なら0点　3マスなら約0.56点　7マス以上なら1点
+同じ4項目を毎手採点　パワー活用の式は効果の有無で切り替わる
+
+---
+
+## 目先の採餌　個数と距離の加点
+
+最初の1歩を固定し引き返さずに4手で拾える最大数を調べる\
+通常のエサもパワーエサも1個として数える
+
+![4手で拾える最大数に比例する加点と最寄りのエサまでの距離に応じて減る加点](figures/response-local.svg)
+
+目先の点 ＝ 0.65 × 最大数 ÷ 4 ＋ 0.35 ÷（1 ＋ 距離）
+
+上は4個と距離0で **1点**　下は2個と距離2で **約0.442点**
+
+---
+
+## 全体の回収　他の候補との歩数差
+
+各方向へ踏み出した後に近いエサから順に回収すると仮定して全回収までの歩数を見積もる
+
+![交差点での候補の最大最小の差が12歩の場合と2歩の場合の得点を比較するグラフ](figures/response-global.svg)
+
+全体の点 ＝（最長歩数 − その方向の歩数）÷ 分母\
+分母は最長と最短の差　差が4歩未満なら4を使う
+
+候補間の差が2歩なら最短でも **0.5点**　全候補が同じ歩数なら **すべて0点**
+
+---
+
+## 慎重さ　通路で最も小さい到着余裕
+
+次の分岐か行き止まりまでの各マスで **敵の最短距離 − 自分の歩数** を比較\
+途中にパワーエサがあればその手前までを調べる
+
+![最小の到着余裕がマイナス2以下なら0点　7以上なら1点　その間は直線的に増えるグラフ](figures/utility-response.svg)
+
+慎重さ ＝（最小の余裕 ＋ 2）÷ 9 を0〜1に収めた値
+
+左に6マス進むと敵はそこまで3マス　最小の余裕が **−3** なので **0点**\
+パワー中や活動中の敵がいないときは全方向が **1点**
+
+---
+
+## 通常時のパワー活用　エサと敵の距離
+
+パワーエサの距離は **1歩先** から　敵の距離は **現在地** から測る
+
+![エサまでの距離と敵までの距離を個別に変えたときの通常時のパワー活用の得点](figures/response-power-normal.svg)
+
+近さ ＝ 1 ÷（1 ＋ 距離 ÷ 4）\
+パワーの点 ＝ エサの近さ ×（0.55 ＋ 0.45 × 敵の近さ）
+
+活動中の敵がいなければ係数は **0.55**　パワーエサが尽きると **0点**
+
+---
+
+## パワー中の追跡　距離と残り時間の境界
+
+1歩先から活動中の敵までの最短距離を使う　最初の1歩にも1手かかる
+
+![残り4手での距離別の得点と敵まで3マスでの残り手数別の得点](figures/response-power-active.svg)
+
+**距離 ＋ 1 ≦ 残り手数** なら点は 1 ÷（1 ＋ 距離 ÷ 4）　届かなければ **0点**
+
+敵まで3マスなら残り3手で **0点**　残り4手で **約0.57点**\
+活動中の敵がいなければ0点　効果が切れると通常時の採点へ戻る
 
 ---
 
@@ -123,70 +195,6 @@ style: |
 ![方向ごとの得点内訳を示す積み上げ棒グラフ　均等配分では上が首位　慎重さを70%にすると下が首位](figures/utility-weights.svg)
 
 下は慎重さの得点だけで上の総合点 **0.649** を上回る
-
----
-
-## 目先の採餌と4手先までのエサ
-
-最初の1歩を決めてから引き返さずに拾えるエサの最大数を調べる\
-通常のエサもパワーエサも1個として数える
-
-| 最初の1歩 | 4手で拾える最大数 | 1歩先から最寄りのエサまで | 目先の点 |
-|:---|---:|---:|---:|
-| ↑ 上 | 4個 | 0マス | **1.000** |
-| ↓ 下 | 2個 | 2マス | **0.442** |
-
-> 目先の点 ＝ 0.65 × 最大数 ÷ 4 ＋ 0.35 ÷（1 ＋ 最寄りのエサまでの距離）
-
-下へ引き返すとすでに食べた通路を通るため最初の1歩でエサを取れない
-
----
-
-## 全体の回収とゴールまでの推定歩数
-
-最初の1歩の後は最も近い残りエサを順に訪れると仮定する\
-最後のエサまでの合計歩数が短い候補ほど高得点
-
-| 最初の1歩 | 残りのエサを回る推定歩数 | 全体の点 |
-|:---|---:|---:|
-| ↑ 上 | 183歩 | **1.000** |
-| ↓ 下 | 185歩 | 0.833 |
-| ← 左 | 195歩 | 0.000 |
-
-> 全体の点 ＝（最長の候補歩数 − この候補の歩数）÷ 歩数差\
-> 歩数差には最長と最短の差を使い 4未満なら4を使う
-
----
-
-## 慎重さを決める到着の余裕
-
-分岐か行き止まりまでの各マスで比較　パワーエサがあればその手前まで
-
-| 左へ進む距離 | 1マス | 2マス | 3マス | 4マス | 5マス | 6マス |
-|:---|---:|---:|---:|---:|---:|---:|
-| 自分の歩数 | 1 | 2 | 3 | 4 | 5 | 6 |
-| 敵の最短距離 | 8 | 7 | 6 | 5 | 4 | 3 |
-| 到着の余裕 | ＋7 | ＋5 | ＋3 | ＋1 | **−1** | **−3** |
-
-余裕 ＝ 敵の最短距離 − 自分の歩数　　慎重さ ＝（通路の最小の余裕 ＋ 2）÷ 9\
-結果を0〜1に収めると **左の慎重さは0点**
-
----
-
-## パワー活用の対象と残り時間
-
-通常時はパワーエサを目指し　パワー中は捕まえられる敵を目指す
-
-| 状態 | 加点の仕組み |
-|:---|:---|
-| 通常 | 1歩先からパワーエサが近いほど加点　敵が迫るとさらに加点 |
-| パワー中 | 最初の1歩も含めて時間内に敵に届くときだけ敵の近さを加点 |
-
-**1歩進んだ先から敵まで3マスの場合**\
-残り4手なら約0.57点　残り3手なら間に合わず0点
-
-> 近さ ＝ 1 ÷（1 ＋ 距離 ÷ 4）\
-> 通常の点 ＝ エサの近さ ×（0.55 ＋ 0.45 × 敵の近さ）
 
 ---
 

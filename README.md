@@ -29,7 +29,7 @@ python3 -m http.server 8000
 
 ## Utility AI の設計スライド
 
-応答曲線が距離を点数に変える仕組みと、同じ交差点で慎重さの重みを上げると進路が変わる理由を説明します。交差点と処理の流れは Markdown 内の文字で編集できます。[公開スライド（PDF）](https://yuuono.github.io/packmanNN/docs/utility-ai.pdf) ／ [編集用の Marp Markdown](docs/utility-ai.md)
+目先の採餌、全体の回収、慎重さ、パワー活用の全4項目について、入力から得点への変化を白黒のグラフで示しています。パワー活用は通常時とパワー中の両方を比較できます。3ページ目が一覧、4〜8ページが各項目のグラフです。[応答曲線の一覧（PDF）](https://yuuono.github.io/packmanNN/docs/utility-ai.pdf#page=3) ／ [編集用の Marp Markdown](docs/utility-ai.md)
 
 Marp for VS Code のプレビューで閲覧できます。Marp CLI を使う場合は、リポジトリ直下から次のコマンドで発表用の HTML を作成できます。
 

@@ -29,10 +29,12 @@ python3 -m http.server 8000
 
 ## Utility AI の設計スライド
 
-4つの採点式と、同じ交差点で重みを変えたときの進路を、実際の計算例で説明します。[Marp スライドの Markdown](docs/utility-ai.md)
+実際の交差点の迷路図と得点の内訳を並べて、均等配分では上へ、慎重さを重視すると下へ進む理由を説明します。[Marp スライドの Markdown](docs/utility-ai.md)
 
 Marp for VS Code のプレビューで閲覧できます。Marp CLI を使う場合は、リポジトリ直下から次のコマンドで発表用の HTML を作成できます。
 
 ```sh
-marp docs/utility-ai.md -o utility-ai.html
+marp docs/utility-ai.md -o docs/utility-ai.html
 ```
+
+HTML を別の場所に移すときは、同じ階層に `docs/figures/` を `figures/` としてコピーしてください。

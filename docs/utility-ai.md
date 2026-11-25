@@ -5,47 +5,100 @@ size: 16:9
 paginate: true
 lang: ja
 title: パックマンの進路選択と Utility AI
-description: 同じ交差点で性格の重みによって進路が変わる仕組み
+description: 応答曲線で盤面を採点して性格の重みに応じて進路を選ぶ仕組み
 style: |
   section {
-    background: #151528;
-    color: #f4f2ff;
+    background: #fff;
+    color: #203847;
+    color-scheme: light;
     font-family: "Hiragino Sans", "Yu Gothic", "Noto Sans CJK JP", sans-serif;
     font-size: 28px;
     line-height: 1.45;
     padding: 48px 80px;
     font-variant-numeric: tabular-nums;
   }
-  h1, h2 { color: #ffdb6e; letter-spacing: -0.03em; line-height: 1.25; }
+  h1, h2 { color: #12354b; letter-spacing: -0.03em; line-height: 1.25; }
   h1 { font-size: 52px; }
   h2 { font-size: 43px; }
-  strong, a { color: #96ece7; }
+  strong, a { color: #09685f; }
   p { margin: 0.5em 0; }
   p > img { display: block; width: 100%; height: auto; background: transparent; }
   table { font-size: 0.94em; margin: 0.55em 0; }
-  table th, table td { border-color: #585875; padding: 0.25em 0.8em; }
-  table th { background: #343450; color: #ffdb6e; }
-  table tr, table tr:nth-child(2n) { background: #222238; }
-  blockquote { color: #f4f2ff; border-left: 5px solid #96ece7; padding-left: 0.65em; }
-  section::after { color: #aaa9bf; font-size: 16px; }
+  table th, table td { border: 1px solid #c6d5d8; padding: 0.28em 0.8em; }
+  table th { background: #e9f3f2; color: #12354b; }
+  table tr, table tr:nth-child(2n) { background: #fff; }
+  blockquote { color: #12354b; background: #f0f7f6; border-left: 5px solid #11736b; padding: 0.2em 0.65em; }
+  section::after { color: #576d78; font-size: 16px; }
+  section.junction ul, section.flow ol {
+    display: grid; list-style: none; padding: 0; margin: 22px 0; gap: 26px;
+  }
+  section.junction li, section.flow li {
+    padding: 16px 12px; margin: 0; text-align: center; border: 2px solid #a5bebf;
+    border-radius: 6px; background: #f5f9f9; color: #12354b;
+  }
+  section.junction ul {
+    grid-template-columns: repeat(3, 185px); grid-template-areas: ". n ." "w p e" ". s .";
+    gap: 5px; justify-content: center;
+  }
+  section.junction li { font-size: 25px; padding: 12px 8px; }
+  section.junction li:nth-child(1) { grid-area: n; }
+  section.junction li:nth-child(2) { grid-area: w; }
+  section.junction li:nth-child(3) { grid-area: p; background: #fff4d2; border-color: #a77925; }
+  section.junction li:nth-child(4) { grid-area: e; background: #e4eaed; border-color: #b6c4cb; }
+  section.junction li:nth-child(5) { grid-area: s; }
+  section.flow ol { grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 38px; }
+  section.flow li { position: relative; font-size: 22px; }
+  section.flow li strong { display: block; margin-bottom: 6px; font-size: 28px; }
+  section.flow li br { display: none; }
+  section.flow li:not(:last-child)::after {
+    content: "→"; position: absolute; top: 50%; left: calc(100% + 2px);
+    transform: translateY(-50%); width: 34px; color: #476974; font-size: 26px;
+  }
 ---
+
+<!-- _class: junction -->
 
 # パックマンの進路選択と Utility AI
 
-均等配分で5手進んだ交差点　上と左にはエサ　下は今来た道
+ゴースト2体の迷路で右へ3手　上へ2手進んだ交差点
 
-![パックマンの上と左にエサが残り下に通過済みの通路がある実際の交差点](figures/utility-junction.svg)
+- ↑ 上のエサ
+- ← 左のエサ
+- **現在地**
+- 壁
+- ↓ 通過済み
 
-**この盤面で均等配分なら上へ　慎重さを重視すると下へ**
+均等配分ではエサのある **上へ**　慎重さを重視すると今来た道を **下へ**
 
 ---
 
-## Utility AI による次の1手の選択
+<!-- _class: flow -->
 
-![合法な方向ごとに4項目を採点しスライダーまたはNNの重みを掛けて総合点が最大の方向へ進む流れ](figures/utility-flow.svg)
+## 観測から次の1手までの流れ
 
-160ミリ秒ごとに現在の盤面で採点し直す\
-同点なら直進を優先　それでも決まらなければ 上 → 左 → 下 → 右 の順
+1. **観測**\
+   通れる各方向のエサと敵までの距離を測る
+2. **採点**\
+   応答曲線などの式で各方向に4項目の点を付ける
+3. **重み付け**\
+   各項目の点に性格の重みを掛けて合計
+4. **選択**\
+   総合点が最大の方向へ1マス移動
+
+たとえば下の慎重さが1点なら　重み25%では0.25点　重み70%では0.70点を加算
+
+160ミリ秒ごとに再評価　同点なら直進を優先　次に 上 → 左 → 下 → 右 の順
+
+---
+
+## 盤面の値を点数に変える応答曲線
+
+応答曲線は観測値を評価点に変える関数　このデモでは人が曲線の形を決める
+
+![パワー活用の近さは距離とともに低下し慎重さは到着の余裕に応じて0から1まで上昇するグラフ](figures/utility-response.svg)
+
+**近さ**　4マスから0マスなら0.50点上昇　12マスから8マスなら約0.08点上昇\
+**慎重さ**　余裕が−2マス以下なら0点　3マスなら約0.56点　7マス以上なら1点
 
 ---
 
@@ -109,7 +162,11 @@ style: |
 
 分岐か行き止まりまでの各マスで比較　パワーエサがあればその手前まで
 
-![左へ進む6マスの比較　5マス目からはゴーストの最短距離が自分の歩数より短い](figures/utility-margin.svg)
+| 左へ進む距離 | 1マス | 2マス | 3マス | 4マス | 5マス | 6マス |
+|:---|---:|---:|---:|---:|---:|---:|
+| 自分の歩数 | 1 | 2 | 3 | 4 | 5 | 6 |
+| 敵の最短距離 | 8 | 7 | 6 | 5 | 4 | 3 |
+| 到着の余裕 | ＋7 | ＋5 | ＋3 | ＋1 | **−1** | **−3** |
 
 余裕 ＝ 敵の最短距離 − 自分の歩数　　慎重さ ＝（通路の最小の余裕 ＋ 2）÷ 9\
 結果を0〜1に収めると **左の慎重さは0点**
@@ -133,20 +190,23 @@ style: |
 
 ---
 
-## NN と Utility AI の役割分担
+<!-- _class: flow -->
 
-> 盤面の12特徴量 → NN → 4つの重み → Utility AI → 次の1手
+## 応答曲線と NN の活性化関数の役割
 
-| モード | 重みの決め方 | 更新のタイミング |
-|:---|:---|:---|
-| スライダー | 人が配分を指定 | スライダーの操作時 |
-| 学習済みNN | 盤面の特徴から予測 | 初回と出口が3つ以上のマス |
+1. **NN の入力**\
+   エサの残量や敵の近さなど盤面の12特徴量
+2. **隠れ層の ReLU**\
+   学習した重みで入力を合成して負の値を0に変換
+3. **出力の softmax**\
+   4つの出力を合計100%の配分に変換
 
-公開デモの初期値は各25%\
-学習済みモデルを読み込むとエサの残量や敵の近さに応じてNNが配分を更新\
-次の交差点まではその配分で Utility AI が毎手の方向を選ぶ
+Utility AI の応答曲線は **各方向の点数** を決める\
+学習済みNNは初回と出口が3つ以上のマスで **4項目の重み** を決める
 
-学習用の盤面収集には Behavior Tree や固定重みの Utility AI も使用
+デモの初期値は手動の各25%　モデルを読み込むとNNが配分を更新
+
+学習用の盤面収集には Behavior Tree や固定重みの Utility AI を使用
 
 ---
 
@@ -163,3 +223,5 @@ style: |
 [標準の2体で開始](https://yuuono.github.io/packmanNN/?agent=utility)　 [0体で比較](https://yuuono.github.io/packmanNN/?agent=utility&ghosts=0)　 [4体で比較](https://yuuono.github.io/packmanNN/?agent=utility&ghosts=4)
 
 [採点式の実装](https://github.com/yuuono/packmanNN/blob/main/ai/utility.js)　 [NNの呼び出し条件](https://github.com/yuuono/packmanNN/blob/main/ai/controller.js)　 [学習方針](https://github.com/yuuono/packmanNN/blob/main/TRAINING_PLAN.md)
+
+応答曲線の設計例　[Mike Lewis　Game AI Pro 3 第13章](https://www.gameaipro.com/GameAIPro3/GameAIPro3_Chapter13_Choosing_Effective_Utility-Based_Considerations.pdf)

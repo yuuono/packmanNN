@@ -13,6 +13,10 @@ const directions = {
   w: 'up', d: 'right', s: 'down', a: 'left',
 };
 const storagePrefix = 'dot-arcade.maze-chase.';
+const requestedAgent = new URLSearchParams(location.search).get('agent');
+const lab = ['utility', 'nn'].includes(requestedAgent);
+const bestKey = lab ? 'ai-best' : 'best';
+let pilot = null;
 function readSetting(key) {
   try { return localStorage.getItem(storagePrefix + key); } catch { return null; }
 }
@@ -24,7 +28,7 @@ let game = createGame();
 let previous = captureActors(game);
 let paused = false;
 let lastTick = performance.now();
-let best = Math.max(0, Number(readSetting('best')) || 0);
+let best = Math.max(0, Number(readSetting(bestKey)) || 0);
 let muted = readSetting('sound') !== 'on';
 let audio = null;
 let restartWasRunning = false;
@@ -116,7 +120,7 @@ function updateHUD() {
   restart.disabled = game.phase === 'ready';
   if (game.score > best) {
     best = game.score;
-    saveSetting('best', best);
+    saveSetting(bestKey, best);
   }
   byId('score').textContent = String(game.score).padStart(6, '0');
   byId('best').textContent = String(best).padStart(6, '0');
@@ -143,27 +147,33 @@ function resetClock() {
 function playOrPause() {
   if (dialog.open) return;
   prepareSound();
-  if (game.phase === 'won' || game.phase === 'gameOver') game = createGame();
+  if (game.phase === 'won' || game.phase === 'gameOver') {
+    game = createGame();
+    pilot?.reset();
+  }
   if (game.phase === 'playing') paused = !paused;
   else {
     paused = false;
+    if (game.phase === 'lifeLost') pilot?.reset();
     startGame(game);
     beep(350, 560, 0.12);
   }
   resetClock();
   updateHUD();
+  pilot?.decision(game);
 }
 
 play.addEventListener('click', playOrPause);
 
 function turn(direction) {
-  if (dialog.open || paused || ['won', 'gameOver'].includes(game.phase)) return;
+  if (lab || dialog.open || paused || ['won', 'gameOver'].includes(game.phase)) return;
   if (game.phase === 'ready' || game.phase === 'lifeLost') playOrPause();
   queueTurn(game, direction);
 }
 
 window.addEventListener('keydown', event => {
   if (dialog.open || event.altKey || event.ctrlKey || event.metaKey || event.isComposing) return;
+  if (event.target.closest?.('input, select, textarea')) return;
   const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
   if (Object.hasOwn(directions, key)) {
     event.preventDefault();
@@ -214,6 +224,7 @@ dialog.addEventListener('cancel', () => { dialog.returnValue = 'cancel'; });
 dialog.addEventListener('close', () => {
   if (dialog.returnValue === 'restart') {
     game = createGame();
+    pilot?.reset();
     paused = false;
     startGame(game);
     screen.focus({preventScroll:true});
@@ -221,6 +232,7 @@ dialog.addEventListener('close', () => {
   restartWasRunning = false;
   resetClock();
   updateHUD();
+  pilot?.decision(game);
 });
 document.addEventListener('visibilitychange', () => {
   if (document.hidden && game.phase === 'playing') {
@@ -235,7 +247,9 @@ function frame(now) {
   const running = game.phase === 'playing' && !paused;
   if (running && now - lastTick >= TICK_MS) {
     previous = captureActors(game);
+    if (pilot) queueTurn(game, pilot.decision(game));
     const events = tick(game);
+    if (pilot && game.phase !== 'playing') pilot.decision(game);
     // Preserve the sub-tick remainder without fast-forwarding a suspended tab.
     lastTick = now - (now - lastTick) % TICK_MS;
     soundFor(events);
@@ -283,4 +297,12 @@ function drawIllustrations() {
 syncSound();
 updateHUD();
 drawIllustrations();
+if (lab) {
+  document.body.classList.add('ai-lab');
+  byId('lab-link').href = location.pathname;
+  byId('lab-link').textContent = '手動プレイに戻る';
+  screen.setAttribute('aria-label', '自動操縦の迷路。スペースで開始・一時停止。');
+  const { mountPanel } = await import('./ai/panel.js');
+  pilot = mountPanel(() => game, requestedAgent);
+}
 requestAnimationFrame(frame);

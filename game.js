@@ -21,6 +21,8 @@ export const WIDTH = MAZE[0].length;
 export const HEIGHT = MAZE.length;
 export const TICK_MS = 160;
 export const POWER_TICKS = 50;
+export const STAGE_ID = 'maze-01';
+export const ENGINE_VERSION = 'maze-chase-1';
 
 const moves = {
   up: [0, -1],
@@ -64,6 +66,11 @@ const distances = exits.map((edges, start) => {
   return distance;
 });
 
+// The pathfinding graph used by all agents is the same one used by the ghosts.
+exits.forEach(Object.freeze);
+export function neighborsOf(tile) { return exits[tile]; }
+export function corridorDistance(from, to) { return distances[from][to]; }
+
 function createGhost(kind, delay) {
   return { kind, x: homeX[kind], y: 7, direction: kind === 'chaser' ? 'left' : 'right', homeTicks: delay };
 }
@@ -90,6 +97,25 @@ export function createGame() {
   };
   resetActors(game);
   return game;
+}
+
+function copyState(state, dots, powers) {
+  return {
+    ...state, dots, powers, player: { ...state.player },
+    ghosts: state.ghosts.map(ghost => ({ ...ghost })),
+  };
+}
+
+// Versions and stage IDs are stored alongside the snapshot in each data record.
+export function snapshotGame(game) {
+  return copyState(game, [...game.dots], [...game.powers]);
+}
+
+export function restoreGame(snapshot) {
+  if (!Array.isArray(snapshot.dots) || !Array.isArray(snapshot.powers)) {
+    throw new TypeError('A game snapshot must contain arrays of remaining dots and power pellets.');
+  }
+  return copyState(snapshot, new Set(snapshot.dots), new Set(snapshot.powers));
 }
 
 export function startGame(game) {

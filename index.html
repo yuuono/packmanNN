@@ -29,7 +29,10 @@
   <header class="site-header">
     <div class="header-inner">
       <div class="brand"><img width="32" height="32" alt="" src="./assets/icon.svg"><span>DOT ARCADE</span></div>
-      <button id="sound" class="sound-button" type="button" aria-pressed="false"><svg class="icon"><use href="#i-muted"/></svg><span>サウンド</span><b id="sound-value">OFF</b></button>
+      <div class="header-actions">
+        <a id="lab-link" class="lab-link" href="?agent=utility">AI実験</a>
+        <button id="sound" class="sound-button" type="button" aria-pressed="false"><svg class="icon"><use href="#i-muted"/></svg><span>サウンド</span><b id="sound-value">OFF</b></button>
+      </div>
     </div>
   </header>
   <main class="wrap">
@@ -58,6 +61,19 @@
         </div>
       </section>
       <aside>
+        <section class="card stats" id="ai-panel" hidden aria-labelledby="ai-title">
+          <div class="card-heading"><h2 id="ai-title">性格スライダー</h2></div>
+          <label class="ai-mode">自動操縦
+            <select id="ai-mode">
+              <option value="manual">手動で重みを調整</option>
+              <option value="nn" id="ai-model-option" disabled>学習済みNN</option>
+            </select>
+          </label>
+          <div id="ai-sliders"></div>
+          <p class="route-label">進路の得点（高い順）<strong id="ai-route">—</strong></p>
+          <label class="model-file">学習済みJSONを読み込む<input type="file" id="ai-file" accept=".json,application/json"></label>
+          <p id="ai-feedback" role="status"></p>
+        </section>
         <section class="card stats" aria-labelledby="stats-title">
           <div class="card-heading"><h2 id="stats-title"><svg class="icon"><use href="#i-chart"/></svg>スコアボード</h2></div>
           <div class="score-display"><span class="micro">SCORE</span><div><span id="score">000000</span><span class="unit">PTS</span></div></div>

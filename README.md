@@ -21,3 +21,7 @@ GitHubのリポジトリで **Settings → Pages → Build and deployment** を�
 ```sh
 python3 -m http.server 8000
 ```
+
+## 性格スライダーの実験
+
+「AI実験」では、4つの重みを変えて自動操縦を試せます。学習済みモデルはサーバーで生成してから、JSONファイルとしてブラウザに読み込みます。[学習方針、JSONL仕様、サーバー実行手順](TRAINING_PLAN.md)

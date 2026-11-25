@@ -86,6 +86,9 @@ dialog::backdrop{background:#080710af}dialog h2{font-size:19px;margin:0}dialog p
 .screen-overlay:not(.scene) .message-box{transform:translateY(clamp(19px,2.6vw,32px))}
 
 .header-actions { display: flex; align-items: center; gap: 16px; }
+.toolbar { flex-wrap: wrap; }
+.ghost-setting { display: inline-flex; align-items: center; gap: 6px; color: var(--dim); font-size: 12px; white-space: nowrap; }
+.ghost-setting select { font: inherit; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 5px; padding: 6px; }
 .lab-link { color: var(--violet); font-size: 12px; text-underline-offset: 3px; }
 .ai-lab .touch-pad, .ai-lab .key-hint { display: none; }
 .ai-mode, .model-file, .route-label { color: var(--dim); font-size: 12px; }

@@ -1,4 +1,4 @@
-import { createGame, startGame, queueTurn, tick, TICK_MS, POWER_TICKS } from './game.js';
+import { createGame, startGame, queueTurn, tick, TICK_MS, POWER_TICKS, DEFAULT_GHOST_COUNT, MAX_GHOST_COUNT } from './game.js';
 import { captureActors, drawBoard } from './board.js';
 
 const byId = id => document.getElementById(id);
@@ -7,15 +7,16 @@ const screen = byId('screen');
 const play = byId('play');
 const restart = byId('restart');
 const dialog = byId('restart-dialog');
+const ghostCountSelect = byId('ghost-count');
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 const directions = {
   ArrowUp: 'up', ArrowRight: 'right', ArrowDown: 'down', ArrowLeft: 'left',
   w: 'up', d: 'right', s: 'down', a: 'left',
 };
 const storagePrefix = 'dot-arcade.maze-chase.';
-const requestedAgent = new URLSearchParams(location.search).get('agent');
+const query = new URLSearchParams(location.search);
+const requestedAgent = query.get('agent');
 const lab = ['utility', 'nn'].includes(requestedAgent);
-const bestKey = lab ? 'ai-best' : 'best';
 let pilot = null;
 function readSetting(key) {
   try { return localStorage.getItem(storagePrefix + key); } catch { return null; }
@@ -24,14 +25,44 @@ function saveSetting(key, value) {
   try { localStorage.setItem(storagePrefix + key, String(value)); } catch { /* Storage is optional. */ }
 }
 
-let game = createGame();
+for (let count = 0; count <= MAX_GHOST_COUNT; count++) {
+  ghostCountSelect.add(new Option(count + '体', String(count)));
+}
+ghostCountSelect.value = query.get('ghosts') ?? String(DEFAULT_GHOST_COUNT);
+if (ghostCountSelect.selectedIndex < 0) ghostCountSelect.value = String(DEFAULT_GHOST_COUNT);
+let game = createGame({ ghostCount: Number(ghostCountSelect.value) });
 let previous = captureActors(game);
 let paused = false;
 let lastTick = performance.now();
-let best = Math.max(0, Number(readSetting(bestKey)) || 0);
+let best = 0;
 let muted = readSetting('sound') !== 'on';
 let audio = null;
 let restartWasRunning = false;
+
+function bestKey() {
+  const key = lab ? 'ai-best' : 'best';
+  return game.ghosts.length === DEFAULT_GHOST_COUNT ? key : key + '-ghosts-' + game.ghosts.length;
+}
+
+function syncGameSettings() {
+  const count = game.ghosts.length;
+  ghostCountSelect.value = String(count);
+  best = Math.max(0, Number(readSetting(bestKey())) || 0);
+  const url = new URL(location.href);
+  if (count === DEFAULT_GHOST_COUNT) url.searchParams.delete('ghosts');
+  else url.searchParams.set('ghosts', String(count));
+  if (url.href !== location.href) history.replaceState(null, '', url);
+  if (lab) url.searchParams.delete('agent');
+  else url.searchParams.set('agent', 'utility');
+  byId('lab-link').href = url.href;
+}
+
+function newGame() {
+  game = createGame({ ghostCount: Number(ghostCountSelect.value) });
+  pilot?.reset();
+  paused = false;
+  syncGameSettings();
+}
 
 function setIcon(button, name) {
   button.querySelector('use').setAttribute('href', '#i-' + name);
@@ -120,7 +151,7 @@ function updateHUD() {
   restart.disabled = game.phase === 'ready';
   if (game.score > best) {
     best = game.score;
-    saveSetting(bestKey, best);
+    saveSetting(bestKey(), best);
   }
   byId('score').textContent = String(game.score).padStart(6, '0');
   byId('best').textContent = String(best).padStart(6, '0');
@@ -148,8 +179,7 @@ function playOrPause() {
   if (dialog.open) return;
   prepareSound();
   if (game.phase === 'won' || game.phase === 'gameOver') {
-    game = createGame();
-    pilot?.reset();
+    newGame();
   }
   if (game.phase === 'playing') paused = !paused;
   else {
@@ -213,22 +243,35 @@ screen.addEventListener('pointerup', event => {
   turn(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up'));
 });
 
-restart.addEventListener('click', () => {
+function confirmRestart(title) {
+  byId('reset-title').textContent = title;
   restartWasRunning = game.phase === 'playing' && !paused;
   if (restartWasRunning) { paused = true; updateHUD(); }
   dialog.showModal();
+}
+restart.addEventListener('click', () => confirmRestart('最初から遊びますか？'));
+ghostCountSelect.addEventListener('change', () => {
+  if (['ready', 'won', 'gameOver'].includes(game.phase)) {
+    newGame();
+    resetClock();
+    updateHUD();
+    pilot?.decision(game);
+  } else {
+    confirmRestart('ゴースト' + ghostCountSelect.value + '体で最初から遊びますか？');
+  }
 });
 byId('again-cancel').addEventListener('click', () => dialog.close('cancel'));
 byId('again-confirm').addEventListener('click', () => dialog.close('restart'));
 dialog.addEventListener('cancel', () => { dialog.returnValue = 'cancel'; });
 dialog.addEventListener('close', () => {
   if (dialog.returnValue === 'restart') {
-    game = createGame();
-    pilot?.reset();
-    paused = false;
+    newGame();
     startGame(game);
     screen.focus({preventScroll:true});
-  } else if (restartWasRunning && !document.hidden) paused = false;
+  } else {
+    ghostCountSelect.value = String(game.ghosts.length);
+    if (restartWasRunning && !document.hidden) paused = false;
+  }
   restartWasRunning = false;
   resetClock();
   updateHUD();
@@ -295,11 +338,11 @@ function drawIllustrations() {
   pixelSprite(guide, ghostSprite, 4, 4, 2, '#8274ff');
 }
 syncSound();
+syncGameSettings();
 updateHUD();
 drawIllustrations();
 if (lab) {
   document.body.classList.add('ai-lab');
-  byId('lab-link').href = location.pathname;
   byId('lab-link').textContent = '手動プレイに戻る';
   screen.setAttribute('aria-label', '自動操縦の迷路。スペースで開始・一時停止。');
   const { mountPanel } = await import('./ai/panel.js');

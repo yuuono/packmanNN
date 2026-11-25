@@ -34,10 +34,16 @@ const reverse = { up: 'down', left: 'right', down: 'up', right: 'left' };
 const headings = Object.keys(moves);
 const id = (x, y) => y * WIDTH + x;
 const positionId = actor => id(actor.x, actor.y);
-const homeX = { chaser: 8, ambusher: 10 };
+// Roster order is stable across a game, its snapshots and individual respawns.
+const ghostStarts = [
+  { kind: 'chaser', x: 8 }, { kind: 'ambusher', x: 10 },
+  { kind: 'chaser', x: 7 }, { kind: 'ambusher', x: 11 },
+];
+export const DEFAULT_GHOST_COUNT = 2;
+export const MAX_GHOST_COUNT = ghostStarts.length;
 
 // All corridors are fixed. Cache their neighbors and shortest-path distances
-// once, so both ghosts can evaluate turns without searching on every tick.
+// once, so ghosts can evaluate turns without searching on every tick.
 const exits = Array.from({ length: WIDTH * HEIGHT }, () => ({}));
 for (let y = 1; y < HEIGHT - 1; y++) {
   for (let x = 1; x < WIDTH - 1; x++) {
@@ -71,18 +77,22 @@ exits.forEach(Object.freeze);
 export function neighborsOf(tile) { return exits[tile]; }
 export function corridorDistance(from, to) { return distances[from][to]; }
 
-function createGhost(kind, delay) {
-  return { kind, x: homeX[kind], y: 7, direction: kind === 'chaser' ? 'left' : 'right', homeTicks: delay };
+function createGhost(index, delay = 4 + index * 5) {
+  const { kind, x } = ghostStarts[index];
+  return { kind, x, y: 7, direction: kind === 'chaser' ? 'left' : 'right', homeTicks: delay };
 }
 
-function resetActors(game) {
+function resetActors(game, ghostCount) {
   game.player = { x: 9, y: 11, direction: 'left' };
-  game.ghosts = [createGhost('chaser', 4), createGhost('ambusher', 9)];
+  game.ghosts = Array.from({ length: ghostCount }, (_, index) => createGhost(index));
   game.powerTicks = 0;
   game.ghostCombo = 0;
 }
 
-export function createGame() {
+export function createGame({ ghostCount = DEFAULT_GHOST_COUNT } = {}) {
+  if (!Number.isInteger(ghostCount) || ghostCount < 0 || ghostCount > MAX_GHOST_COUNT) {
+    throw new RangeError('ghostCount must be an integer between 0 and ' + MAX_GHOST_COUNT);
+  }
   const dots = new Set();
   const powers = new Set();
   MAZE.forEach((row, y) => {
@@ -95,7 +105,7 @@ export function createGame() {
     dots, powers, totalDots: dots.size + powers.size, score: 0, lives: 3,
     ticks: 0, queuedDirection: null, phase: 'ready',
   };
-  resetActors(game);
+  resetActors(game, ghostCount);
   return game;
 }
 
@@ -119,7 +129,7 @@ export function restoreGame(snapshot) {
 }
 
 export function startGame(game) {
-  if (game.phase === 'lifeLost') resetActors(game);
+  if (game.phase === 'lifeLost') resetActors(game, game.ghosts.length);
   if (game.phase === 'ready' || game.phase === 'lifeLost') game.phase = 'playing';
 }
 
@@ -189,11 +199,11 @@ function collectPellet(game, events) {
   }
 }
 
-function collide(game, ghost, events) {
+function collide(game, ghostIndex, events) {
   if (game.powerTicks) {
     game.score += 200 * 2 ** Math.min(game.ghostCombo, 3);
     game.ghostCombo++;
-    Object.assign(ghost, createGhost(ghost.kind, 15));
+    Object.assign(game.ghosts[ghostIndex], createGhost(ghostIndex, 15));
     events.push('ghost');
     return;
   }
@@ -216,7 +226,7 @@ export function tick(game) {
     events.push('won');
     return events;
   }
-  for (const ghost of game.ghosts) {
+  for (const [index, ghost] of game.ghosts.entries()) {
     if (ghost.homeTicks > 0) {
       ghost.homeTicks--;
       continue;
@@ -226,7 +236,7 @@ export function tick(game) {
     const ghostAfter = positionId(ghost);
     const crossed = ghostBefore === playerAfter && ghostAfter === playerBefore;
     if (ghostAfter === playerAfter || crossed) {
-      collide(game, ghost, events);
+      collide(game, index, events);
       if (game.phase !== 'playing') break;
     }
   }

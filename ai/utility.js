@@ -113,10 +113,7 @@ export function features(game) {
   const remaining = game.dots.size + game.powers.size;
   const nearby = neighborhoods[origin];
   const ghosts = game.ghosts.filter(ghost => ghost.homeTicks === 0);
-  const proximityOf = kind => {
-    const ghost = ghosts.find(actor => actor.kind === kind);
-    return ghost ? near(corridorDistance(origin, tileOf(ghost))) : 0;
-  };
+  const proximityOf = kind => near(nearestGhost(origin, ghosts.filter(ghost => ghost.kind === kind).map(tileOf)));
   const approaching = ghosts.filter(ghost => {
     const tile = tileOf(ghost);
     const next = neighborsOf(tile)[ghost.direction];
@@ -132,7 +129,7 @@ export function features(game) {
     game.powerTicks / POWER_TICKS,
     near(nearestItem(origin, tile => game.dots.has(tile))),
     near(nearestItem(origin, tile => game.powers.has(tile))),
-    proximityOf('chaser'), proximityOf('ambusher'), approaching / game.ghosts.length,
+    proximityOf('chaser'), proximityOf('ambusher'), game.ghosts.length ? approaching / game.ghosts.length : 0,
     choices[origin].length / 4, endMetrics(game).escape_count / 4,
     nearby.filter(tile => game.dots.has(tile)).length / nearby.length,
     remaining ? clamp(distanceSum / remaining / 32) : 0,

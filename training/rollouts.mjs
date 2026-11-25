@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { isDeepStrictEqual } from 'node:util';
 import {
-  ENGINE_VERSION, STAGE_ID, createGame, startGame, queueTurn, tick, snapshotGame, restoreGame,
+  DEFAULT_GHOST_COUNT, ENGINE_VERSION, STAGE_ID, createGame, startGame, queueTurn, tick, snapshotGame, restoreGame,
 } from '../game.js';
 import {
   FEATURE_VERSION, FEATURE_NAMES, POLICY_VERSION, PRESETS,
@@ -163,11 +163,11 @@ function situation(game) {
   return 'ordinary';
 }
 
-function sampleEpisode(seed, episodeNumber, alreadyUsed) {
+function sampleEpisode(seed, episodeNumber, alreadyUsed, ghostCount) {
   const episodeSeed = seed ^ Math.imul(episodeNumber, 0x9e3779b1);
   const drive = randomStream(episodeSeed);
   const sample = randomStream(episodeSeed ^ 0x85ebca6b);
-  const game = createGame();
+  const game = createGame({ ghostCount });
   startGame(game);
   const preset = PRESETS[episodeNumber % PRESETS.length];
   const buckets = new Map();
@@ -201,17 +201,19 @@ function sampleEpisode(seed, episodeNumber, alreadyUsed) {
   return Array.from(buckets.values(), bucket => bucket.selected).filter(Boolean);
 }
 
-export function* generateRecords({ count = 100, seed = 42, horizon = 32 } = {}) {
+export function* generateRecords({ count = 100, seed = 42, horizon = 32, ghostCount = DEFAULT_GHOST_COUNT } = {}) {
   positiveInteger(count, 'count');
   positiveInteger(horizon, 'horizon');
   if (!Number.isInteger(seed) || seed < 0 || seed > 0xffffffff) {
     throw new Error('seed must be an unsigned 32-bit integer');
   }
   const used = new Set();
+  // Keep IDs stable for existing data and distinct when combining difficulty settings.
+  const episodePrefix = ghostCount === DEFAULT_GHOST_COUNT ? STAGE_ID : STAGE_ID + '-g' + ghostCount;
   let consecutiveEmpty = 0;
   for (let episode = 1; used.size < count; episode++) {
-    const episodeId = STAGE_ID + '-' + seed + '-' + episode;
-    const samples = sampleEpisode(seed, episode, used);
+    const episodeId = episodePrefix + '-' + seed + '-' + episode;
+    const samples = sampleEpisode(seed, episode, used, ghostCount);
     consecutiveEmpty = samples.length ? 0 : consecutiveEmpty + 1;
     if (consecutiveEmpty >= 100) throw new Error('No more distinct junctions found in the collection runs');
     for (const { state, key, category } of samples) {

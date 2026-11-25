@@ -49,6 +49,8 @@ node training/replay.mjs --input experiments/pilot.jsonl
 python3 training/analyze.py --input experiments/pilot.jsonl
 ```
 
+生成時のゴースト数は既定で2体。`--ghosts 0` から `--ghosts 4` まで指定できる。たとえば4体の予備実験は `node training/generate.mjs --out experiments/pilot-g4.jsonl --count 100 --seed 42 --ghosts 4` で実行する。体数は各盤面の `state.ghosts.length` から読み取れ、再生と評価にも引き継がれる。
+
 JSONLの各行に feature_version と順序付き feature_names が入る。候補の入力列に加え、開始・終了状態のSHA-256とイベントも照合する。出力先が存在する場合は別名を指定する。特徴量のみ更新した場合は、対応するエンジン版で次のように再計算する。
 
 ```sh

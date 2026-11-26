@@ -5,7 +5,7 @@ size: 16:9
 paginate: true
 lang: ja
 title: パックマンの進路選択と Utility AI
-description: 応答曲線で盤面を採点して性格の重みに応じて進路を選ぶ仕組み
+description: NN が性格の重みを決め Utility AI が各方向を採点して進路を選ぶ仕組み
 style: |
   section {
     background: #fff;
@@ -55,6 +55,35 @@ style: |
     content: "→"; position: absolute; top: 50%; left: calc(100% + 2px);
     transform: translateY(-50%); width: 34px; color: #444; font-size: 26px;
   }
+  section.hybrid ul {
+    display: grid; grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 36px 40px; margin: 18px 0; padding: 0; list-style: none;
+  }
+  section.hybrid li {
+    position: relative; grid-column: span 2; margin: 0; padding: 10px 8px;
+    border: 2px solid #aaa; border-radius: 6px; background: #fff;
+    text-align: center; font-size: 22px; line-height: 1.3;
+  }
+  section.hybrid li strong { font-size: 25px; }
+  section.hybrid li:nth-child(-n+2) { grid-column: span 3; }
+  section.hybrid li:nth-child(2) { border: 3px solid #222; }
+  section.hybrid li:nth-child(3) { grid-column: 3 / span 2; background: #f1f1f1; }
+  section.hybrid li:nth-child(4) { grid-column: 1 / span 2; }
+  section.hybrid li:nth-child(-n+2)::after {
+    content: ""; position: absolute; top: 100%; height: 14px; width: calc(50% + 22px);
+    border-bottom: 2px solid #555;
+  }
+  section.hybrid li:first-child::after { left: 50%; border-left: 2px solid #555; }
+  section.hybrid li:nth-child(2)::after { right: 50%; border-right: 2px solid #555; }
+  section.hybrid li:nth-child(3)::before, section.hybrid li:nth-child(5)::before {
+    content: "↓"; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+    color: #333; font-size: 25px; line-height: 1;
+  }
+  section.hybrid li:nth-child(5)::before { line-height: 36px; }
+  section.hybrid li:nth-child(4)::after, section.hybrid li:nth-child(5)::after {
+    content: "→"; position: absolute; top: 50%; left: 100%; width: 40px;
+    transform: translateY(-50%); color: #333; font-size: 26px;
+  }
 ---
 
 <!-- _class: junction -->
@@ -73,22 +102,27 @@ style: |
 
 ---
 
-<!-- _class: flow -->
+<!-- _class: hybrid -->
 
-## 観測から次の1手までの流れ
+## Utility AI と NN のハイブリッド構成
 
-1. **観測**\
-   通れる各方向のエサと敵までの距離を測る
-2. **採点**\
-   応答曲線などの式で各方向に4項目の点を付ける
-3. **重み付け**\
-   各項目の点に性格の重みを掛けて合計
-4. **選択**\
-   総合点が最大の方向へ1マス移動
+太枠の NN が引き受けるのは **人がスライダーで決めていた4項目の配分**
 
-たとえば下の慎重さが1点なら　重み25%では0.25点　重み70%では0.70点を加算
+- **公開中の AI 実験の初期設定**\
+  人がスライダーで設定　初期値は各25%
+- **学習済み JSON の読み込み後**\
+  盤面の12特徴量 → NN が配分を推論
+- **選んだモードの重み**\
+  目先の採餌　全体の回収\
+  慎重さ　パワー活用
+- **盤面 → 手書きの採点式**\
+  通れる方向ごとに4項目を採点
+- **Utility AI の総合点**\
+  方向ごとに 点数 × 重み を合計
+- **次の1手**\
+  総合点が最大の方向へ1マス移動
 
-160ミリ秒ごとに再評価　同点なら直進を優先　次に 上 → 左 → 下 → 右 の順
+公開デモは手動配分で自動操縦　NN の利用には学習済み JSON が必要
 
 ---
 
@@ -194,27 +228,47 @@ style: |
 
 ![方向ごとの得点内訳を示す積み上げ棒グラフ　均等配分では上が首位　慎重さを70%にすると下が首位](figures/utility-weights.svg)
 
-下は慎重さの得点だけで上の総合点 **0.649** を上回る
+左は手動の初期値　右は仕組みを示すための固定配分の例\
+NN が右と同じ配分を返す場合も上は **0.649点**　下は **0.861点** となり下へ進む
 
 ---
 
 <!-- _class: flow -->
 
-## 応答曲線と NN の活性化関数の役割
+## NN の重み更新と Utility AI の移動周期
 
 1. **NN の入力**\
    エサの残量や敵の近さなど盤面の12特徴量
 2. **隠れ層の ReLU**\
-   学習した重みで入力を合成して負の値を0に変換
+   16個のユニットで特徴を合成して負の値を0に変換
 3. **出力の softmax**\
    4つの出力を合計100%の配分に変換
 
-Utility AI の応答曲線は **各方向の点数** を決める\
-学習済みNNは初回と出口が3つ以上のマスで **4項目の重み** を決める
+| ブラウザでの判断 | 初回 | 通路の各マス | 次の交差点 |
+|:---|:---|:---|:---|
+| NN の重み | 配分を推論 | 直前の配分を保持 | 盤面から再推論 |
+| Utility AI の進路 | 採点して選択 | 毎手採点して選択 | 採点して選択 |
 
-デモの初期値は手動の各25%　モデルを読み込むとNNが配分を更新
+交差点は出口が3つ以上のマス　移動は1手160ミリ秒\
+同点なら直進を優先　次に 上 → 左 → 下 → 右 の順
 
-学習用の盤面収集には Behavior Tree や固定重みの Utility AI を使用
+---
+
+<!-- _class: flow -->
+
+## サーバーでの学習とブラウザへの受け渡し
+
+1. **交差点の収集**\
+   Behavior Tree や固定重みの Utility AI で迷路をプレイ
+2. **配分の比較**\
+   同じ交差点から5種類の固定配分でそれぞれ最大32手を試行
+3. **重みの学習**\
+   標準は成績差のある盤面から勝者の配分を学習
+4. **デモでの推論**\
+   学習済み JSON を読み込みブラウザで新しい盤面の配分を推論
+
+Behavior Tree の役割は学習に使う盤面の収集\
+モデル読み込み後のプレイでは **NN が決めた配分** と **手書きの Utility AI** で自動操縦
 
 ---
 

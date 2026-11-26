@@ -4,8 +4,8 @@ theme: default
 size: 16:9
 paginate: true
 lang: ja
-title: パックマンの進路選択と Utility AI
-description: NN が性格の重みを決め Utility AI が各方向を採点して進路を選ぶ仕組み
+title: パックマンの進路選択と utility-based AI
+description: ニューラルネットワークが何を重視するか決めて各方向の得点で進む道を選ぶ仕組み
 style: |
   section {
     background: #fff;
@@ -55,40 +55,18 @@ style: |
     content: "→"; position: absolute; top: 50%; left: calc(100% + 2px);
     transform: translateY(-50%); width: 34px; color: #444; font-size: 26px;
   }
-  section.hybrid ul {
-    display: grid; grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: 36px 40px; margin: 18px 0; padding: 0; list-style: none;
-  }
-  section.hybrid li {
-    position: relative; grid-column: span 2; margin: 0; padding: 10px 8px;
-    border: 2px solid #aaa; border-radius: 6px; background: #fff;
-    text-align: center; font-size: 22px; line-height: 1.3;
-  }
-  section.hybrid li strong { font-size: 25px; }
-  section.hybrid li:nth-child(-n+2) { grid-column: span 3; }
-  section.hybrid li:nth-child(2) { border: 3px solid #222; }
-  section.hybrid li:nth-child(3) { grid-column: 3 / span 2; background: #f1f1f1; }
-  section.hybrid li:nth-child(4) { grid-column: 1 / span 2; }
-  section.hybrid li:nth-child(-n+2)::after {
-    content: ""; position: absolute; top: 100%; height: 14px; width: calc(50% + 22px);
-    border-bottom: 2px solid #555;
-  }
-  section.hybrid li:first-child::after { left: 50%; border-left: 2px solid #555; }
-  section.hybrid li:nth-child(2)::after { right: 50%; border-right: 2px solid #555; }
-  section.hybrid li:nth-child(3)::before, section.hybrid li:nth-child(5)::before {
-    content: "↓"; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
-    color: #333; font-size: 25px; line-height: 1;
-  }
-  section.hybrid li:nth-child(5)::before { line-height: 36px; }
-  section.hybrid li:nth-child(4)::after, section.hybrid li:nth-child(5)::after {
-    content: "→"; position: absolute; top: 50%; left: 100%; width: 40px;
-    transform: translateY(-50%); color: #333; font-size: 26px;
-  }
+  section.roles ol { gap: 64px; margin: 25px 0; }
+  section.roles li { font-size: 25px; padding: 18px 10px; }
+  section.roles li br { display: inline; }
+  section.roles li strong + br { display: none; }
+  section.roles li:not(:last-child)::after { width: 60px; }
+  section.inputs table { font-size: 23px; }
+  section.inputs th, section.inputs td { padding: 0.28em 0.6em; }
 ---
 
 <!-- _class: junction -->
 
-# パックマンの進路選択と Utility AI
+# パックマンの進路選択と utility-based AI
 
 ゴースト2体の迷路で右へ3手　上へ2手進んだ交差点
 
@@ -98,31 +76,46 @@ style: |
 - 壁
 - ↓ 通過済み
 
-均等配分ではエサのある **上へ**　慎重さを重視すると今来た道を **下へ**
+エサを取りやすい **上の道** と　敵との距離に余裕がある **下の道**
 
 ---
 
-<!-- _class: hybrid -->
+<!-- _class: flow roles -->
 
-## Utility AI と NN のハイブリッド構成
+## 進む道を決めるまでの2段階
 
-太枠の NN が引き受けるのは **人がスライダーで決めていた4項目の配分**
+1. **何を重視するか**\
+   ニューラルネットワーク（NN）が\
+   盤面の12個の数値から4項目の重みを決める
+2. **どの道を選ぶか**\
+   utility-based AI が各方向の4項目を採点\
+   各点に重みを掛けて合計が最大の道へ進む
 
-- **公開中の AI 実験の初期設定**\
-  人がスライダーで設定　初期値は各25%
-- **学習済み JSON の読み込み後**\
-  盤面の12特徴量 → NN が配分を推論
-- **選んだモードの重み**\
-  目先の採餌　全体の回収\
-  慎重さ　パワー活用
-- **盤面 → 手書きの採点式**\
-  通れる方向ごとに4項目を採点
-- **Utility AI の総合点**\
-  方向ごとに 点数 × 重み を合計
-- **次の1手**\
-  総合点が最大の方向へ1マス移動
+4つの項目は **近くのエサ　全体の集めやすさ　敵からの安全　パワーの活用**
 
-公開デモは手動配分で自動操縦　NN の利用には学習済み JSON が必要
+同じ交差点でも均等配分なら上へ　安全を重視した例では下へ
+
+公開デモでは人がスライダーで重みを設定　学習済みモデルを読み込むと NN が担当
+
+---
+
+<!-- _class: inputs -->
+
+## NN が見る盤面の12個の数値
+
+1ページ目の交差点での入力値　すべて0〜1
+
+| 入力 1〜6 | 値 | 入力 7〜12 | 値 |
+|:---|---:|:---|---:|
+| 全エサの残り割合 | 0.964 | 最寄りの先回り型の敵の近さ | 0 |
+| パワーエサの残り割合 | 1 | こちらに向かっている敵の割合 | 0 |
+| パワーの残り時間の割合 | 0 | 進める方向の数 ÷ 4 | 0.75 |
+| 最寄りの通常エサの近さ | 0.800 | 敵より先に抜けられそうな方向の数 ÷ 4 | 0.50 |
+| 最寄りのパワーエサの近さ | 0.308 | 4歩以内の通路で通常エサがあるマスの割合 | 0.632 |
+| 最寄りの追跡型の敵の近さ | 0.364 | 残りの全エサまでの平均距離 ÷ 32　上限1 | 0.296 |
+
+近さは通路距離が短いほど1に近づく　待機中の敵は対象外　対象がなければ0\
+この交差点は **進める道が3本**　そのうち **敵より先に抜けられそうな道が2本**
 
 ---
 
@@ -132,11 +125,11 @@ style: |
 
 | 頁 | 採点項目 | 入力と得点の関係 |
 |---:|:---|:---|
-| 4 | 目先の採餌 | エサの数に比例して加点　距離で減衰 |
-| 5 | 全体の回収 | 推定歩数が短い候補ほど高得点 |
-| 6 | 慎重さ | 余裕が増すと直線的に上昇　両端で一定 |
-| 7 | パワー活用　通常時 | エサに近いほど加点　敵の近さで増幅 |
-| 8 | パワー活用　パワー中 | 時間内に届くときだけ敵の近さで加点 |
+| 5 | 目先の採餌 | エサの数に比例して加点　距離で減衰 |
+| 6 | 全体の回収 | 推定歩数が短い候補ほど高得点 |
+| 7 | 慎重さ | 余裕が増すと直線的に上昇　両端で一定 |
+| 8 | パワー活用　通常時 | エサに近いほど加点　敵の近さで増幅 |
+| 9 | パワー活用　パワー中 | 時間内に届くときだけ敵の近さで加点 |
 
 同じ4項目を毎手採点　パワー活用の式は効果の有無で切り替わる
 
@@ -235,7 +228,7 @@ NN が右と同じ配分を返す場合も上は **0.649点**　下は **0.861�
 
 <!-- _class: flow -->
 
-## NN の重み更新と Utility AI の移動周期
+## 重みを選ぶタイミングと移動の間隔
 
 1. **NN の入力**\
    エサの残量や敵の近さなど盤面の12特徴量
@@ -246,8 +239,8 @@ NN が右と同じ配分を返す場合も上は **0.649点**　下は **0.861�
 
 | ブラウザでの判断 | 初回 | 通路の各マス | 次の交差点 |
 |:---|:---|:---|:---|
-| NN の重み | 配分を推論 | 直前の配分を保持 | 盤面から再推論 |
-| Utility AI の進路 | 採点して選択 | 毎手採点して選択 | 採点して選択 |
+| NN が決める重み | 配分を決める | 同じ配分を使う | 配分を決め直す |
+| 進む方向 | 採点して選ぶ | 毎手採点して選ぶ | 採点して選ぶ |
 
 交差点は出口が3つ以上のマス　移動は1手160ミリ秒\
 同点なら直進を優先　次に 上 → 左 → 下 → 右 の順
@@ -259,16 +252,16 @@ NN が右と同じ配分を返す場合も上は **0.649点**　下は **0.861�
 ## サーバーでの学習とブラウザへの受け渡し
 
 1. **交差点の収集**\
-   Behavior Tree や固定重みの Utility AI で迷路をプレイ
+   Behavior Tree や重みを固定した自動操縦で迷路をプレイ
 2. **配分の比較**\
    同じ交差点から5種類の固定配分でそれぞれ最大32手を試行
 3. **重みの学習**\
-   標準は成績差のある盤面から勝者の配分を学習
+   成績に差がついた交差点で最も良かった配分を学習
 4. **デモでの推論**\
-   学習済み JSON を読み込みブラウザで新しい盤面の配分を推論
+   学習済みモデルを読み込み新しい盤面の重みを決める
 
 Behavior Tree の役割は学習に使う盤面の収集\
-モデル読み込み後のプレイでは **NN が決めた配分** と **手書きの Utility AI** で自動操縦
+学習した NN が決めるのは **4項目の重み**　各方向の点数はゲームに組み込んだ式で計算
 
 ---
 
@@ -286,4 +279,4 @@ Behavior Tree の役割は学習に使う盤面の収集\
 
 [採点式の実装](https://github.com/yuuono/packmanNN/blob/main/ai/utility.js)　 [NNの呼び出し条件](https://github.com/yuuono/packmanNN/blob/main/ai/controller.js)　 [学習方針](https://github.com/yuuono/packmanNN/blob/main/TRAINING_PLAN.md)
 
-応答曲線の設計例　[Mike Lewis　Game AI Pro 3 第13章](https://www.gameaipro.com/GameAIPro3/GameAIPro3_Chapter13_Choosing_Effective_Utility-Based_Considerations.pdf)
+名称と応答曲線の出典　[Mike Lewis　Game AI Pro 3 第13章　175ページ](https://www.gameaipro.com/GameAIPro3/GameAIPro3_Chapter13_Choosing_Effective_Utility-Based_Considerations.pdf#page=9)

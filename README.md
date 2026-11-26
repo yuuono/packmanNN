@@ -27,11 +27,11 @@ python3 -m http.server 8000
 
 「AI実験」では、4つの重みを変えて自動操縦を試せます。学習済みモデルはサーバーで生成してから、JSONファイルとしてブラウザに読み込みます。[学習方針、JSONL仕様、サーバー実行手順](TRAINING_PLAN.md)
 
-## Utility AI の設計スライド
+## utility-based AI の設計スライド
 
-AI 実験では、人がスライダーで決めていた4つの重みを、モデルの読み込み後は NN が盤面から決めます。手書きの Utility AI は各方向の評価点にその重みを掛け、総合点が最大の方向へ進みます。[ハイブリッド構成図（PDF 2ページ）](https://yuuono.github.io/packmanNN/docs/utility-ai.pdf#page=2) ／ [更新のタイミングと学習の流れ（11〜12ページ）](https://yuuono.github.io/packmanNN/docs/utility-ai.pdf#page=11)
+NN はエサや敵の状態から、4つの項目をどれだけ重視するか決めます。ゲームは通れる方向ごとに4項目を採点し、各点に重みを掛けて合計が最大の方向へ進みます。[役割分担（PDF 2ページ）](https://yuuono.github.io/packmanNN/docs/utility-ai.pdf#page=2) ／ [NN に入る12個の値（3ページ）](https://yuuono.github.io/packmanNN/docs/utility-ai.pdf#page=3)
 
-目先の採餌、全体の回収、慎重さ、パワー活用の全4項目について、入力から得点への変化を白黒のグラフで示しています。パワー活用は通常時とパワー中の両方を比較できます。3ページ目が一覧、4〜8ページが各項目のグラフです。[応答曲線の一覧（PDF）](https://yuuono.github.io/packmanNN/docs/utility-ai.pdf#page=3) ／ [編集用の Marp Markdown](docs/utility-ai.md)
+目先の採餌、全体の回収、慎重さ、パワー活用の4項目について、入力から得点への変化を5〜9ページのグラフで示しています。[応答曲線の一覧（4ページ）](https://yuuono.github.io/packmanNN/docs/utility-ai.pdf#page=4) ／ [重みの更新と学習（12〜13ページ）](https://yuuono.github.io/packmanNN/docs/utility-ai.pdf#page=12) ／ [編集用の Marp Markdown](docs/utility-ai.md)
 
 Marp for VS Code のプレビューで閲覧できます。Marp CLI を使う場合は、リポジトリ直下から次のコマンドで発表用の HTML を作成できます。
 
